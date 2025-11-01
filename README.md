@@ -187,9 +187,10 @@ cd client
 npm run build
 ```
 
-2. Start production services:
+2. Start services:
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+cd <project-name>
+docker-compose up -d
 ```
 
 ## Troubleshooting
