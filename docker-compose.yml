@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # ---------------------------
+  # AUTHENTICATION SERVICE
+  # ---------------------------
+  auth-service:
+    build: ./server/auth-service
+    container_name: auth-service
+    ports:
+      - "7001:7001"
+    env_file:
+      - ./server/auth-service/.env
+    environment:
+      - MONGO_URI=mongodb://localhost:27017/auth-ms-db
+      - JWT_SECRET=${JWT_SECRET:-supersecret}
+      - PORT=7001
+      - CORS_ORIGIN=http://localhost:9002
+    depends_on:
+      - mongo
+    networks:
+      - backend
+
+  # ---------------------------
+  # GEMINI RECOMMENDATION SERVICE
+  # ---------------------------
+  recommendation-service:
+    build: ./server/recommendation-service
+    container_name: recommendation-service
+    ports:
+      - "7002:7002"
+    env_file:
+      - ./server/recommendation-service/.env
+    environment:
+      - PORT=7002
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-placeholder}
+      - CORS_ORIGIN=http://localhost:9002
+    networks:
+      - backend
+
+  # ---------------------------
+  # COURSE MANAGEMENT SERVICE
+  # ---------------------------
+  course-service:
+    build: ./server/course-service
+    container_name: course-service
+    ports:
+      - "7003:7003"
+    env_file:
+      - ./server/course-service/.env
+    environment:
+      - MONGO_URI=mongodb://localhost:27017/course-ms-db
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_URL=http://elasticsearch:8200
+      - PORT=7003
+      - CORS_ORIGIN=http://localhost:9002
+    depends_on:
+      - mongo
+      - redis
+      - elasticsearch
+    networks:
+      - backend
+
+  # ---------------------------
+  # MONGO DATABASE
+  # ---------------------------
+  mongo:
+    image: mongo:6
+    container_name: mongo
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - backend
+
+  # ---------------------------
+  # REDIS CACHE
+  # ---------------------------
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+
+  # ---------------------------
+  # ELASTICSEARCH
+  # ---------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.14.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "8200:8200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - backend
+
+  # ---------------------------
+  # NEXT.JS FRONTEND (CLIENT)
+  # ---------------------------
+  client:
+    build: ./client
+    container_name: nextjs-client
+    ports:
+      - "9002:9002"
+    environment:
+      - NEXT_PUBLIC_AUTH_URL=http://localhost:7001/api/auth
+      - NEXT_PUBLIC_RECOMMEND_URL=http://localhost:7002/api/recommendations
+      - NEXT_PUBLIC_COURSE_URL=http://localhost:7003/api/courses
+    depends_on:
+      - auth-service
+      - course-service
+      - recommendation-service
+    networks:
+      - backend
+
+# ---------------------------
+# NETWORKS & VOLUMES
+# ---------------------------
+volumes:
+  mongo_data:
+  es_data:
+
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,1 @@
+uploaded csv files which are used to insert data into the database meant to reside in the uploads folder
