@@ -40,14 +40,3 @@ jobs:
           docker build -t auth-service:latest ./auth-service
           docker build -t course-service:latest ./course-service
           docker build -t recommendation-service:latest ./recommendation-service
-
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ubuntu
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            cd /var/www/course-management/server
-            docker compose pull
-            docker compose up -d
