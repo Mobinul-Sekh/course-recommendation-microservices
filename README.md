@@ -192,10 +192,6 @@ npm run build
 docker-compose -f docker-compose.prod.yml up -d
 ```
 
-### Kubernetes (Optional)
-
-For Kubernetes deployment, refer to the `k8s/` directory for deployment manifests.
-
 ## Troubleshooting
 
 - **MongoDB connection issues**: Ensure MongoDB is running and the connection string is correct
